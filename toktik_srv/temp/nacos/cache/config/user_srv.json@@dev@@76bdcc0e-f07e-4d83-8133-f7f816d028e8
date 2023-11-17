@@ -1,0 +1,30 @@
+{
+  "name": "user_srv",
+  "host": "172.27.128.1",
+  "tags": ["user"],
+  "mysql": {
+    "username": "root",
+    "password": "qq31415926535--",
+    "host": "47.115.217.189",
+    "port": 3306,
+    "dbname": "tiktok"
+  },
+  "redis": {
+    "password": "qq31415926535--",
+    "ip": "47.115.217.189",
+    "port": 6379,
+    "db": 0
+  },
+  "consul": {
+    "host": "172.27.128.1",
+    "port": 8500
+  },
+  "static_save_path": {
+    "dst": "../static",
+    "dst_name": "static"
+  },
+  "server_info": {
+    "ip": "172.27.128.1",
+    "port": 8080
+  }
+}

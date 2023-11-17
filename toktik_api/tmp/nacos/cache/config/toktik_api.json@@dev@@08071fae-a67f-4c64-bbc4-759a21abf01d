@@ -1,0 +1,21 @@
+{
+  "name": "toktik_api",
+  "toktik_srv": {
+    "name": "toktik_srv",
+    "tags": ["toktik"]
+  },
+  "redis": {
+    "host": "47.115.217.189",
+    "port": 6379,
+    "password": "qq31415926535--",
+    "db_name": 0
+  },
+  "consul": {
+    "host": "192.168.1.101",
+    "port": 8500
+  },
+  "static":{
+    "dst":"../static",
+    "dst_name":"/static/"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "",
+  "user_srv": {
+    "name": "",
+    "tags": []
+  },
+  "redis": {
+    "host": "",
+    "port": 0,
+    "password": "",
+    "db_name": 0
+  },
+  "consul": {
+    "host": "",
+    "port": 0
+  }
+}

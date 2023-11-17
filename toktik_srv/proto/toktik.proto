@@ -1,0 +1,189 @@
+syntax = "proto3";
+option go_package = "./";
+
+
+service TokTik{
+  //feed api
+  rpc VideoFeed(VideoFeedRequest) returns(VideoFeedResponse);
+
+  //user api
+  rpc GetUserInfo(UserInfoRequest) returns(UserInfoResponse);
+  rpc UserRegister(UserInfoRequest) returns(UserBasicResponse);
+  rpc UserLogin(UserInfoRequest) returns(UserBasicResponse);
+  rpc CreateUserInfo(UserInfoRequest) returns(UserBasicResponse);
+
+  //publish api
+  rpc PublishAction(UserPublishRequest) returns(UserBasicResponse);
+  rpc UserPublishList(UserPublishListRequest) returns(UserPublishListResponse);
+
+  //favorite api
+  rpc UserFavoriteAction(UserFavoriteRequest) returns(UserBasicResponse);
+  rpc UserFavoriteList(UserFavoriteListRequest) returns(UserFavoriteListResponse);
+
+  //comment api
+  rpc UserCommentAction(UserCommentRequest) returns(UserCommentResponse);
+  rpc UserCommentList(UserCommentListRequest) returns(UserCommentListResponse);
+
+  //relation api
+  rpc UserRelationAction(UserRelationRequest) returns(UserBasicResponse);
+  rpc UserRelationFollowList(UserRelationFollowListRequest) returns(UserRelationListResponse);
+  rpc UserRelationFollowerList(UserRelationFollowerListRequest) returns(UserRelationListResponse);
+}
+
+message VideoInfo{
+  int64  Id = 1;
+  int64 User_Info_id = 2;
+  UserInfo Author = 3;
+  string play_url = 4;
+  string cover_url = 5;
+  int64 favorite_count = 6;
+  int64 comment_count = 7;
+  bool is_favorite = 8;
+  string title = 9;
+}
+
+message UserInfo{
+  int64      Id = 1;
+  string     Name = 2;
+  int64      FollowCount = 3;
+  int64      FollowerCount = 4;
+  bool       IsFollow = 5;
+  string     Avatar = 6;
+  string     BackgroundImage = 7;
+  string     Signature = 8;
+  int64      TotalFavorited = 9;
+  int64      WorkCount = 10;
+  int64      FavoriteCount = 11;
+}
+
+
+message CommentInfo {
+  int64 id = 1; // 视频评论id
+  int64 user_info_id = 2;
+  int64 video_id = 3;
+  string content = 5; // 评论内容
+  string create_date = 6; // 评论发布日期，格式 mm-dd
+  UserInfo user_info=7;
+}
+
+message UserBasicResponse{
+  int32 status_code = 1;
+  string status_msg = 2;
+  int32 user_id = 3;
+  string token = 4;
+}
+
+//user api message
+message UserInfoRequest{
+  int64 user_id = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message UserInfoResponse{
+  int64      Id = 1;
+  string     Name = 2;
+  int64      FollowCount = 3;
+  int64      FollowerCount = 4;
+  bool       IsFollow = 5;
+  string     Avatar = 6;
+  string     BackgroundImage = 7;
+  string     Signature = 8;
+  int64      TotalFavorited = 9;
+  int64      WorkCount = 10;
+  int64      FavoriteCount = 11;
+  UserBasicResponse userBasicResponse = 12;
+}
+
+
+//publish api message
+message UserPublishRequest{
+  bytes VideoData = 1;
+  string title = 2;
+  string token = 3;
+}
+
+message UserPublishListRequest{
+  int64 user_id = 1;
+}
+
+message UserPublishListResponse{
+  repeated VideoInfo video_info_list = 1;
+  UserBasicResponse userBasicResponse = 2;
+}
+
+
+//favorite api message
+message UserFavoriteRequest{
+  string token = 1;
+  int64 video_id = 2;
+  string action_type = 3;
+}
+
+message UserFavoriteListRequest{
+  int64 user_id = 1;
+}
+
+message UserFavoriteListResponse{
+  repeated VideoInfo video_info_list = 1;
+  UserBasicResponse userBasicResponse = 2;
+}
+
+
+//comment api message
+message UserCommentRequest{
+  string token = 1;
+  int64 video_id = 2;
+  string action_type = 3;
+  string comment_text = 4;
+  string comment_id = 5;
+}
+
+message UserCommentListRequest{
+  int64 video_id = 1;
+}
+
+message UserCommentResponse{
+  CommentInfo comment_info = 1;
+  UserBasicResponse userBasicResponse = 2;
+}
+
+message UserCommentListResponse{
+  repeated CommentInfo comment_info_list = 1;
+  UserBasicResponse userBasicResponse = 2;
+}
+
+//relation api message
+
+message UserRelationRequest{
+  string token = 1;
+  int64 to_user_id = 2;
+  string action_type = 3;
+}
+
+message UserRelationFollowListRequest{
+  int64 user_id = 1;
+}
+
+message UserRelationFollowerListRequest{
+  int64 user_id = 1;
+}
+
+message UserRelationListResponse{
+  repeated UserInfo user_info_list = 1;
+  UserBasicResponse userBasicResponse = 2;
+}
+
+//feed api message
+message VideoFeedRequest{
+  string token = 1;
+  int64 latest_time = 2;
+}
+
+message VideoFeedResponse{
+  repeated VideoInfo video_list = 1;
+  UserBasicResponse userBasicResponse = 2;
+  int64 next_time = 3;
+}
+
+

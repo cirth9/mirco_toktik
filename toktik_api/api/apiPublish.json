@@ -1,0 +1,29 @@
+{
+  "Value": {
+    "title": [
+      "123456"
+    ],
+    "token": [
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySW5mb0lEIjozLCJVc2VybmFtZSI6IjIzMTE5NzU4MzVAcXEuY29tIiwiUGFzc3dvcmQiOiIxMjM0NTYiLCJleHAiOjE2OTk1MTMwNzV9.2fY-PmIpRpXB44kVtSPRoIPIrFLikvUTkCIBbwWK7ps"
+    ]
+  },
+  "File": {
+    "data": [
+      {
+        "Filename": "VID20231004111237.mp4",
+        "Header": {
+          "Content-Disposition": [
+            "form-data; name=\"data\"; filename=\"VID20231004111237.mp4\""
+          ],
+          "Content-Length": [
+            "47452053"
+          ],
+          "Content-Type": [
+            "multipart/form-data"
+          ]
+        },
+        "Size": 47452053
+      }
+    ]
+  }
+}

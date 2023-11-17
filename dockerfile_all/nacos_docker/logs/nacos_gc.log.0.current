@@ -1,0 +1,12 @@
+OpenJDK 64-Bit Server VM (25.372-b07) for linux-amd64 JRE (1.8.0_372-b07), built on May 15 2023 14:44:58 by "mockbuild" with gcc 4.8.5 20150623 (Red Hat 4.8.5-44)
+Memory: 4k page, physical 7027860k(3666732k free), swap 2097152k(2097152k free)
+CommandLine flags: -XX:+CMSClassUnloadingEnabled -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled -XX:GCLogFileSize=104857600 -XX:InitialHeapSize=536870912 -XX:MaxHeapSize=536870912 -XX:MaxNewSize=268435456 -XX:NewSize=268435456 -XX:NumberOfGCLogFiles=10 -XX:OldPLABSize=16 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SoftRefLRUPolicyMSPerMB=0 -XX:SurvivorRatio=8 -XX:+UseCMSCompactAtFullCollection -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:+UseGCLogFileRotation -XX:-UseParNewGC 
+2023-10-31T10:11:46.619+0800: 1.558: [GC (Allocation Failure) 2023-10-31T10:11:46.619+0800: 1.559: [DefNew: 209792K->4538K(235968K), 0.0152838 secs] 209792K->4538K(498112K), 0.0163949 secs] [Times: user=0.04 sys=0.00, real=0.02 secs] 
+Heap
+ def new generation   total 235968K, used 15728K [0x00000000e0000000, 0x00000000f0000000, 0x00000000f0000000)
+  eden space 209792K,   5% used [0x00000000e0000000, 0x00000000e0aed610, 0x00000000ecce0000)
+  from space 26176K,  17% used [0x00000000ee670000, 0x00000000eeadeb40, 0x00000000f0000000)
+  to   space 26176K,   0% used [0x00000000ecce0000, 0x00000000ecce0000, 0x00000000ee670000)
+ concurrent mark-sweep generation total 262144K, used 0K [0x00000000f0000000, 0x0000000100000000, 0x0000000100000000)
+ Metaspace       used 14395K, capacity 15030K, committed 15232K, reserved 1062912K
+  class space    used 1662K, capacity 1803K, committed 1920K, reserved 1048576K
