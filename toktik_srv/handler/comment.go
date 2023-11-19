@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
@@ -12,6 +13,7 @@ import (
 	proto "mirco_tiktok/toktik_srv/proto"
 	"mirco_tiktok/toktik_srv/utils"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,6 +26,12 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 
 	pool := goredis.NewPool(global.Rdb)
 	rs := redsync.New(pool)
+	rdsMutex := rs.NewMutex("comment_count")
+
+	var userCommentCache strings.Builder
+	userCommentCache.WriteString("comment-")
+	userCommentCache.WriteString(strconv.Itoa(int(in.VideoId)))
+	userCommentCacheName := userCommentCache.String()
 
 	parseToken, err := utils.ParseToken(in.Token)
 	if err != nil {
@@ -50,7 +58,6 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 
 	if in.ActionType == "1" {
 
-		rdsMutex := rs.NewMutex("comment_count")
 		if err = rdsMutex.Lock(); err != nil {
 			panic(err)
 		}
@@ -58,6 +65,7 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 		_ = global.DB.Transaction(func(tx *gorm.DB) error {
 			models2.AddNewComment(newComment)
 			models2.AscCommentCountById(in.VideoId)
+			global.Rdb.Del(context.Background(), userCommentCacheName)
 			return nil
 		})
 
@@ -89,7 +97,6 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 			}, err1
 		}
 
-		rdsMutex := rs.NewMutex("comment_count")
 		if err = rdsMutex.Lock(); err != nil {
 			panic(err)
 		}
@@ -97,13 +104,14 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 		_ = global.DB.Transaction(func(tx *gorm.DB) error {
 			models2.RemoveComment(CommentIdInt)
 			models2.DscCommentCountById(in.VideoId)
+			global.Rdb.Del(context.Background(), userCommentCacheName)
 			return nil
 		})
 
 		if ok, err2 := rdsMutex.Unlock(); !ok || err2 != nil {
 			panic(err2)
 		}
-	
+
 		return &proto.UserCommentResponse{
 			CommentInfo: nil,
 			UserBasicResponse: &proto.UserBasicResponse{
@@ -127,17 +135,41 @@ func (toktikServer *TokTikServer) UserCommentAction(ctx context.Context, in *pro
 }
 
 func (toktikServer *TokTikServer) UserCommentList(ctx context.Context, in *proto.UserCommentListRequest) (*proto.UserCommentListResponse, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("[UserFavoriteList] Recover from panic!")
+		}
+	}()
+
+	var userCommentCache strings.Builder
+	userCommentCache.WriteString("comment-")
+	userCommentCache.WriteString(strconv.Itoa(int(in.VideoId)))
+	userCommentCacheName := userCommentCache.String()
+	if userCommentCacheData, err := global.Rdb.Get(context.Background(), userCommentCacheName).Result(); err != nil {
+		var userCommentCacheResponse *proto.UserCommentListResponse
+		if err1 := json.Unmarshal([]byte(userCommentCacheData), &userCommentCacheResponse); err1 != nil {
+			panic(err1)
+		}
+		return userCommentCacheResponse, nil
+	}
+
 	commentList := models2.GetAllCommentByVid(in.VideoId)
 	var commentInfoList []*proto.CommentInfo
 	for _, v := range commentList {
 		commentInfo := CommentToProtoCommentInfo(v)
 		commentInfoList = append(commentInfoList, commentInfo)
 	}
-	return &proto.UserCommentListResponse{
+	userCommentListResponse := &proto.UserCommentListResponse{
 		CommentInfoList: commentInfoList,
 		UserBasicResponse: &proto.UserBasicResponse{
 			StatusCode: 0,
 			StatusMsg:  "获取评论列表成功",
 		},
-	}, nil
+	}
+	userCommentData, err := json.Marshal(userCommentListResponse)
+	if err != nil {
+		panic(err)
+	}
+	global.Rdb.Set(context.Background(), userCommentCacheName, userCommentData, time.Hour)
+	return userCommentListResponse, nil
 }
