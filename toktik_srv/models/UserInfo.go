@@ -81,3 +81,31 @@ func DecreaseWorkCountByUid(userId int64) {
 	userInfo.WorkCount -= 1
 	global.DB.Save(&userInfo)
 }
+
+func IncFollowCount(userId int64) {
+	var userInfo UserInfo
+	global.DB.Where("id = ? ", userId).First(&userInfo)
+	userInfo.FollowCount++
+	global.DB.Save(&userInfo)
+}
+
+func DecFollowCount(userId int64) {
+	var userInfo UserInfo
+	global.DB.Where("id = ? ", userId).First(&userInfo)
+	userInfo.FollowCount--
+	global.DB.Save(&userInfo)
+}
+
+func IncFollowerCount(userId int64) {
+	var userInfo UserInfo
+	global.DB.Where("id = ? ", userId).First(&userInfo)
+	userInfo.FollowerCount++
+	global.DB.Save(&userInfo)
+}
+
+func DecFollowerCount(userId int64) {
+	var userInfo UserInfo
+	global.DB.Where("id = ? ", userId).First(&userInfo)
+	userInfo.FollowerCount--
+	global.DB.Save(&userInfo)
+}

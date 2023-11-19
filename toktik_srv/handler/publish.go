@@ -6,11 +6,13 @@ import (
 	"github.com/go-errors/errors"
 	"go.uber.org/zap"
 	"mirco_tiktok/toktik_srv/config"
+	"mirco_tiktok/toktik_srv/global"
 	models2 "mirco_tiktok/toktik_srv/models"
 	proto "mirco_tiktok/toktik_srv/proto"
 	utils2 "mirco_tiktok/toktik_srv/utils"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -48,6 +50,7 @@ func saveFile(file *VideoData, dst string) error {
 }
 
 func (toktikServer *TokTikServer) PublishAction(ctx context.Context, in *proto.UserPublishRequest) (*proto.UserBasicResponse, error) {
+
 	var parseToken *utils2.UserBasicClaims
 	parseToken, err := utils2.ParseToken(in.Token)
 	if err != nil {
@@ -98,10 +101,17 @@ func (toktikServer *TokTikServer) PublishAction(ctx context.Context, in *proto.U
 		}, errors.Errorf("publish failed")
 	}
 
+	videoUrl := utils2.GetVideoURL(filename)
+
+	var videoCacheName strings.Builder
+	videoCacheName.WriteString("video-")
+	videoCacheName.WriteString(filename)
+	global.Rdb.Set(context.Background(), videoCacheName.String(), videoUrl, 0)
+
 	PublishVideo := models2.Video{
 		UserInfoId: parseToken.UserInfoID,
 		Author:     models2.FindUserInfoById(parseToken.UserInfoID),
-		PlayUrl:    utils2.GetVideoURL(filename),
+		PlayUrl:    videoUrl,
 		CoverUrl:   "",
 		Title:      in.Title,
 	}

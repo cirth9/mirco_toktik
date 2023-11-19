@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-errors/errors"
 	"github.com/go-redsync/redsync/v4"
@@ -12,13 +13,15 @@ import (
 	models2 "mirco_tiktok/toktik_srv/models"
 	proto "mirco_tiktok/toktik_srv/proto"
 	"mirco_tiktok/toktik_srv/utils"
+	"strconv"
+	"strings"
 )
 
 // UserFavoriteAction 这里需要考虑并发问题
 func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *proto.UserFavoriteRequest) (*proto.UserBasicResponse, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("[UserFavorite] Recover from panic!")
+			fmt.Println("[UserFavoriteAction] Recover from panic!")
 		}
 	}()
 
@@ -37,6 +40,11 @@ func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *pr
 		}, err
 	}
 
+	var userFavorCache strings.Builder
+	userFavorCache.WriteString("favor-")
+	userFavorCache.WriteString(strconv.Itoa(int(parseToken.UserInfoID)))
+	userFavorCacheName := userFavorCache.String()
+
 	if in.ActionType == "1" {
 		if models2.IsUserFavorVideo(parseToken.UserInfoID, in.VideoId) {
 			return &proto.UserBasicResponse{
@@ -46,6 +54,7 @@ func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *pr
 				Token:      in.Token,
 			}, errors.Errorf("favor repeat")
 		}
+
 		rdsMutex := rs.NewMutex("favor_count")
 		if err = rdsMutex.Lock(); err != nil {
 			panic(err)
@@ -54,6 +63,8 @@ func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *pr
 		_ = global.DB.Transaction(func(tx *gorm.DB) error {
 			models2.AscFavoriteCountById(in.VideoId)
 			models2.AddUserFavorVideos(parseToken.UserInfoID, in.VideoId)
+			//global.Rdb.SAdd(context.Background(), userFavorCache.String(), strconv.Itoa(int(in.VideoId)))
+			global.Rdb.Del(context.Background(), userFavorCacheName)
 			return nil
 		})
 
@@ -85,6 +96,8 @@ func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *pr
 		_ = global.DB.Transaction(func(tx *gorm.DB) error {
 			models2.DscFavoriteCountById(in.VideoId)
 			models2.RmUserFavorVideos(parseToken.UserInfoID, in.VideoId)
+			//global.Rdb.SRem(context.Background(), userFavorCache.String(), strconv.Itoa(int(in.VideoId)))
+			global.Rdb.Del(context.Background(), userFavorCacheName)
 			return nil
 		})
 
@@ -109,13 +122,32 @@ func (toktikServer *TokTikServer) UserFavoriteAction(ctx context.Context, in *pr
 }
 
 func (toktikServer *TokTikServer) UserFavoriteList(ctx context.Context, in *proto.UserFavoriteListRequest) (*proto.UserFavoriteListResponse, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("[UserFavoriteList] Recover from panic!")
+		}
+	}()
+
+	var userFavorCache strings.Builder
+	userFavorCache.WriteString("favor-")
+	userFavorCache.WriteString(strconv.Itoa(int(in.UserId)))
+	userFavorCacheKey := userFavorCache.String()
+	if favorListCache, err := global.Rdb.Get(context.Background(), userFavorCacheKey).Result(); err != nil {
+		var favorListData *proto.UserFavoriteListResponse
+		err1 := json.Unmarshal([]byte(favorListCache), &favorListData)
+		if err1 != nil {
+			panic(err1)
+		}
+		return favorListData, nil
+	}
+
 	videoList := models2.GetUserFavorList(in.UserId)
 	var videoInfoList []*proto.VideoInfo
 	for _, v := range videoList {
 		videoInfo := VideoToProtoVideoInfo(v)
 		videoInfoList = append(videoInfoList, videoInfo)
 	}
-	return &proto.UserFavoriteListResponse{
+	userFavorListResponse := &proto.UserFavoriteListResponse{
 		VideoInfoList: videoInfoList,
 		UserBasicResponse: &proto.UserBasicResponse{
 			StatusCode: 0,
@@ -123,5 +155,12 @@ func (toktikServer *TokTikServer) UserFavoriteList(ctx context.Context, in *prot
 			UserId:     int32(in.UserId),
 			Token:      "",
 		},
-	}, nil
+	}
+	userFavorListData, err := json.Marshal(userFavorListResponse)
+	if err != nil {
+		panic(err)
+	}
+
+	global.Rdb.Set(context.Background(), userFavorCacheKey, userFavorListData, 0)
+	return userFavorListResponse, nil
 }

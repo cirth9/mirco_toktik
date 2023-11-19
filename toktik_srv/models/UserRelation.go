@@ -17,12 +17,16 @@ func AddRelation(userInfoId, followId int64) {
 		FollowId:   followId,
 	}
 	global.DB.Create(&userRelation)
+	IncFollowCount(userInfoId)
+	IncFollowerCount(followId)
 }
 
 func RemoveRelation(userInfoId, followId int64) {
 	global.DB.
 		Where("user_info_id = ? and follow_id = ?", userInfoId, followId).
 		Delete(&UserRelations{})
+	DecFollowCount(userInfoId)
+	DecFollowerCount(followId)
 }
 
 func GetUserFollowId(userId int64) []string {
